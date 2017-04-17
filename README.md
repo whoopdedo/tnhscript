@@ -19,7 +19,7 @@ your derivative scripts under the GPL and provide a download location
 of the modified version.
 
 The script documentation for fan-mission authors is hosted online at 
-The Dromesday Book. Please go to http://www.whoopdedo.org/doku/tnhscript/index
+The Dromesday Book. Please go to http://dromed.whoopdedo.org/tnhscript/index
 to learn how you can use custom scripts in your missions. _Not all scripts
 from the original tnhScript will be converted to Squirrel language._
 
