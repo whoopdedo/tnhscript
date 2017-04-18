@@ -39,7 +39,24 @@ class ScriptController extends GenericControl
     }
 }
 
- /***********************
+/********************
+ * CommandControl
+ *
+ * Execute an arbitrary command.
+ *
+ * Inherits: GenericControl
+ */
+class CommandControl extends GenericControl
+{
+    function ControlString(control)
+    {
+        foreach (cmd in split(control, ";"))
+	    Debug.Command(cmd)
+	return true
+    }
+}
+
+/***********************
  * TrapMoveRelative
  *
  * Move and apply velocity to an object relative to its current position
