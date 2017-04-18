@@ -51,8 +51,8 @@ class CommandControl extends GenericControl
     function ControlString(control)
     {
         foreach (cmd in split(control, ";"))
-	    Debug.Command(cmd)
-	return true
+            Debug.Command(cmd)
+        return true
     }
 }
 
