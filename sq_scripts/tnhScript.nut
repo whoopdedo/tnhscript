@@ -14,10 +14,10 @@
  * The source code and GNU General Public License can be accessed
  * at <https://github.com/whoopdedo/tnhscript>
  ****************************************************************************/
-print(@"tnhScript 3, Copyright (C) 2017 Tom N Harris <telliamed@whoopdedo.org>
-This program comes with ABSOLUTELY NO WARRANTY.
-This is free software, and you are welcome to redistribute it
-under certain conditions; see the source code for details.")
+Debug.Log("tnhScript 3, Copyright (C) 2017 Tom N Harris <telliamed@whoopdedo.org>\n"
+  +"This program comes with ABSOLUTELY NO WARRANTY. This is free software,"
+  +"and you are welcome to redistribute it under certain conditions; see"
+  +"the source code or <https://github.com/whoopdedo/tnhscript> for details.")
 
 class tnhRootScript extends SqRootScript
 {
@@ -466,6 +466,16 @@ class ScriptController extends GenericControl
             CDSend("ScriptControl", self, control)
         }
         return true
+    }
+}
+
+class CommandControl extends GenericControl
+{
+    function ControlString(control)
+    {
+        foreach (cmd in split(control, ";"))
+	    Debug.Command(cmd)
+	return true
     }
 }
 
