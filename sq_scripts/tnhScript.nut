@@ -19,8 +19,112 @@ Debug.Log("tnhScript 3, Copyright (C) 2017 Tom N Harris <telliamed@whoopdedo.org
   +"and you are welcome to redistribute it under certain conditions; see"
   +"the source code or <https://github.com/whoopdedo/tnhscript> for details.")
 
+local function strtotime(str)
+{
+    local match = regexp(@"^\s*((?:\d+(?:\.\d*)?)|(?:\.\d+))([MmSs]?)").capture(str)
+    if (match)
+    {
+        local num = str.slice(match[1].begin, match[1].end).tofloat()
+        local suffix = match.len() == 3 ? str.slice(match[2].begin, match[2].end).tolower() : ""
+        if (suffix == "m")
+            num *= 60000
+        else if (suffix == "s")
+            num *= 1000
+        return num.tointeger()
+    }
+    return 0
+}
+
+local ColorNames = 
+{
+        black   = 0x000000
+        silver  = 0xC0C0C0
+        gray    = 0x808080
+        grey    = 0x808080
+        white   = 0xFFFFFF
+        maroon  = 0x000080
+        red     = 0x0000FF
+        purple  = 0x800080
+        fuchsia = 0xFF00FF
+        green   = 0x008000
+        lime    = 0x00FF00
+        olive   = 0x008080
+        yellow  = 0x00FFFF
+        navy    = 0x800000
+        blue    = 0xFF0000
+        teal    = 0x808000
+        aqua    = 0xFFFF00
+}
+
+local function strtocolor(str)
+{
+    str = str.tolower()
+    if (str in ColorNames)
+        return ColorNames[str]
+    if (str[0] == '#')
+    {
+        local r = str.slice(1,3).tointeger(16),
+              g = str.slice(3,5).tointeger(16),
+              b = str.slice(5,7).tointeger(16);
+        return b<<16 | g<<8 | r
+    }
+    local match = regexp(@"(\d+) *, *(\d+) *, *(\d+)").capture(str)
+    if (match)
+    {
+        local r = str.slice(match[1].begin,match[1].end).tointeger(16),
+              g = str.slice(match[1].begin,match[1].end).tointeger(16),
+              b = str.slice(match[1].begin,match[1].end).tointeger(16);
+        return b<<16 | g<<8 | r
+    }
+    return 0
+}
+
+local function CalcTextTime(str)
+{
+    local count = 0, letter_count = 0, space_count = 0, is_space = false
+    foreach (word in split(strip(str), " \r\n\t"))
+    {
+        if (word == "")
+        {
+            if (is_space)
+            {
+                if (++space_count == 3)
+                {
+                    ++letter_count
+                    space_count = 0
+                }
+            }
+            else
+            {
+                is_space = true
+            }
+        }
+        else
+        {
+            if (word.len() + letter_count > 3)
+            {
+                ++count
+                letter_count = 0
+                space_count = 0
+            }
+            else
+                letter_count += word.len()
+            is_space = false
+        }
+    }
+    return 500 * (count < 10 ? 10 : count)
+}
+
+
 class tnhRootScript extends SqRootScript
 {
+    function DebugString(str)
+    {
+//@if DEBUG
+        print(str)
+//@endif
+    }
+
     function CDSend(message, data=null)
     {
         if (data == null)
@@ -761,13 +865,13 @@ class KnockOnDoor extends tnhRootScript
     function OnFrobWorldEnd()
     {
         if (Locked.IsLocked(self) && Door.GetDoorState(self) == eDoorStatus.kDoorClosed)
-	    foreach (owns_link in Link.GetAll("~Owns", self, 0))
-	    {
-	        local owner = LinkDest(owns_link)
-	        AI.Signal(owner, "knock_knock")
-		PostMessage(owner, "Interact", "knock_knock")
-	    }
-	Reply(true)
+            foreach (owns_link in Link.GetAll("~Owns", self, 0))
+            {
+                local owner = LinkDest(owns_link)
+                AI.Signal(owner, "knock_knock")
+                PostMessage(owner, "Interact", "knock_knock")
+            }
+        Reply(true)
     }
 }
 
@@ -786,86 +890,53 @@ class OnScreenText extends GenericScript
     function DisplayBookPage(book, page)
     {
         local book_file = "..\\books\\" + book
-	local page_s = format("page_%d", page)
+        local page_s = format("page_%d", page)
         local page_text = Data.GetString(book_file, page_s, "", "strings")
-	if (str == "")
-	    return false
-	local str = null
-	local color = DefaultTextColor()
-	local time = 0
-	str = Data.GetString(book_file, page_s + "_color", "", "strings")
-	if (str != "")
-	    color = strtocolor(str)
-	str = Data.GetString(book_file, page_s + "_time", "", "strings")
-	if (str != "")
-	{
-	    local wait = strtotime(str)
-	    if (wait > 0)
-	        time = wait
-	}
-	if (time == 0)
-	{
-	    local count = 0, letter_count = 0, space_count = 0, is_space = false
-	    foreach (word in split(trim(page_text), " \r\n\t"))
-	    {
-	        if (word == "")
-		{
-		    if (!is_space)
-		    {
-		        if (++space_count == 3)
-		        {
-		            ++letter_count
-		            space_count = 0
-			    if (letter_count > 3)
-			    {
-				++count
-				letter_count = 0
-			    }
-		        }
-			is_space = true
-		    }
-		}
-		else
-		{
-		    if (word.len() + letter_count > 3)
-		    {
-		        ++count
-		        letter_count = 0
-			space_count = 0
-		    }
-		    else
-		        letter_count += word.len()
-                    is_space = false
-		}
-	    }
-	    time = 500 * (count < 10 ? 10 : count)
-	}
-	DisplayText(page_text, color, time)
+        if (page_text == "")
+            return false
+        local str = null
+        local color = DefaultTextColor()
+        local time = 0
+        str = Data.GetString(book_file, page_s + "_color", "", "strings")
+        if (str != "")
+            color = strtocolor(str)
+        str = Data.GetString(book_file, page_s + "_time", "", "strings")
+        if (str != "")
+        {
+            local wait = strtotime(str)
+            if (wait > 0)
+                time = wait
+        }
+        if (time == 0)
+        {
+            time = CalcTextTime(page_text)
+        }
+        DisplayText(page_text, color, time)
 
-	str = Data.GetString(book_file, "page_s" + "_auto", "", "strings")
-	if (str != "")
-	{
-	    local wait = strtotime(str)
-	    if (wait > 0 || str[0] == '0')
-	    {
-	        if (wait > time)
-		    time = wait
-	    }
-	    else
-	        time = 0
-	}
-	else
-	    time = 0
-	page++
-	str = Data.GetString(book_file, page_s + "_next", "", "strings")
-	if (str != "")
-	    page = str.tointeger()
-	str = Data.GetString(book_file, format("page_%d", page), "", "strings")
-	if (str == "")
-	    page = 0
-	ChangeBookPage(book, page, time)
+        str = Data.GetString(book_file, "page_s" + "_auto", "", "strings")
+        if (str != "")
+        {
+            local wait = strtotime(str)
+            if (wait > 0 || str[0] == '0')
+            {
+                if (wait > time)
+                    time = wait
+            }
+            else
+                time = 0
+        }
+        else
+            time = 0
+        page++
+        str = Data.GetString(book_file, page_s + "_next", "", "strings")
+        if (str != "")
+            page = str.tointeger()
+        str = Data.GetString(book_file, format("page_%d", page), "", "strings")
+        if (str == "")
+            page = 0
+        ChangeBookPage(book, page, time)
 
-	return true
+        return true
     }
 
     function DisplayText(text, color, time)
@@ -876,17 +947,17 @@ class OnScreenText extends GenericScript
     function DisplayPage(page)
     {
         if (!HasProperty("Book"))
-	{
-	    DebugString("Object has no book!")
-	    return false
-	}
-	local book = GetProperty("Book")
-	if (book.len() == 0)
-	{
-	    DebugString("Object has no book!")
-	    return false
-	}
-	return DisplayBookPage(book, page)
+        {
+            DebugString("Object has no book!")
+            return false
+        }
+        local book = GetProperty("Book")
+        if (book.len() == 0)
+        {
+            DebugString("Object has no book!")
+            return false
+        }
+        return DisplayBookPage(book, page)
     }
 
     function ChangePage(page)
@@ -897,34 +968,34 @@ class OnScreenText extends GenericScript
     function ChangeBookPage(book, page, time)
     {
         if (time > 0)
-	{
-	    if (IsDataSet("auto_scroll"))
-	    {
-	        KillTimer(GetData("auto_scroll"))
-		ClearData("auto_scroll")
+        {
+            if (IsDataSet("auto_scroll"))
+            {
+                KillTimer(GetData("auto_scroll"))
+                ClearData("auto_scroll")
             }
-	    SetData("auto_scroll", SetOneShotTimer("AutoScroll", time))
-	}
-	return ChangePage(page)
+            SetData("auto_scroll", SetOneShotTimer("AutoScroll", time))
+        }
+        return ChangePage(page)
     }
 
     function DefaultTextColor()
     {
-        return RGB(255,255,255)
+        return 0xFFFFFF 
     }
 
     function OnBeginScript()
     {
-	SetData("page", ParamGetInt("page", 0))
+        SetData("page", ParamGetInt("page", 0))
     }
 
     function OnTimer()
     {
         if (message().name == "AutoScroll")
-	{
-	    ClearData("auto_scroll")
-	    DisplayPage(GetData("page"))
-	}
+        {
+            ClearData("auto_scroll")
+            DisplayPage(GetData("page"))
+        }
     }
 
     function TurnOn()
@@ -934,67 +1005,73 @@ class OnScreenText extends GenericScript
             KillTimer(GetData("auto_scroll"))
             ClearData("auto_scroll")
         }
-	local page = GetData("page")
-	if (page < 0)
-	    page = 0
-	DisplayPage(page)
-	Reply(true)
+        local page = GetData("page")
+        if (page < 0)
+            page = 0
+        DisplayPage(page)
+        Reply(true)
     }
 
     function Control()
     {
         local control = message().data
-	local op = '@'
-	local arg = -1
-	switch (typeof control)
-	{
-	    case "integer":
-	        arg = control; break
-	    case "float":
-	        arg = floor(control); break
-	    case "string":
-	        control = lstrip(control)
-		if (control[0] >= '0' && control[0] <= '9')
-		    arg = control.tointeger()
-		else
-		{
-		    op = control[0]
-		    control = control.slice(1)
-		    arg = control[0] == '.' ? 0x7FFFFFFF : control.tointeger()
-		}
-		break
-	    default:
-	        Reply(false)
-		return
-	}
-	if (arg > 0)
-	{
-	    local page = GetData("page")
-	    if (arg == 0x7FFFFFFF)
-	        arg = page
+        local op = '@'
+        local arg = -1
+        try
+            switch (typeof control)
+            {
+                case "integer":
+                    arg = control; break
+                case "float":
+                    arg = control.tointeger(); break
+                case "string":
+                    control = lstrip(control)
+                    if (control[0] >= '0' && control[0] <= '9')
+                        arg = control.tointeger()
+                    else
+                    {
+                        op = control[0]
+                        control = control.slice(1)
+                        arg = control[0] == '.' ? 0x7FFFFFFF : control.tointeger()
+                    }
+                    break
+                default:
+                    Reply(false)
+                    return
+            }
+        catch(err)
+        {
+            Reply(false)
+            return
+        }
+        if (arg > 0)
+        {
+            local page = GetData("page")
+            if (arg == 0x7FFFFFFF)
+                arg = page
             switch (op)
-	    {
-	        case '@':
-		    if (page != arg)
-		        ChangePage(arg)
-	            break
-		case '#':
-		    DisplayPage(arg); break
-		case '+':
-		    if (arg != 0)
-		        ChangePage(page + arg)
-	            break
-		case '-':
-		    if (arg != 0)
-		        ChangePage(arg > page ? 0 : page - arg)
-	            break
-		case '$':
-		default:
-		    Reply(false)
-		    return
-	    }
-	}
-	Reply(true)
+            {
+                case '@':
+                    if (page != arg)
+                        ChangePage(arg)
+                    break
+                case '#':
+                    DisplayPage(arg); break
+                case '+':
+                    if (arg != 0)
+                        ChangePage(page + arg)
+                    break
+                case '-':
+                    if (arg != 0)
+                        ChangePage(arg > page ? 0 : page - arg)
+                    break
+                case '$':
+                default:
+                    Reply(false)
+                    return
+            }
+        }
+        Reply(true)
     }
 }
 

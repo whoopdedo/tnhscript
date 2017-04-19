@@ -17,6 +17,13 @@
 
 class tnhRootScript extends SqRootScript
 {
+    function DebugString(str)
+    {
+//@if DEBUG
+        print(str)
+//@endif
+    }
+
     function CDSend(message, data=null)
     {
         if (data == null)
