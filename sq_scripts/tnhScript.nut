@@ -29,123 +29,122 @@ class tnhRootScript extends SqRootScript
             Link.BroadcastOnAllLinksData(self, message, "ControlDevice", data)
     }
 
-function GetAnyLink(flavor, src=0, dst=0)
-{
-    local links = []
-    foreach (link in Link.GetAll(flavor,src,dst))
-        links.append(link)
-    return links.len() > 0 ? links[Data.RandInt(0, links.len()-1)] : 0
-}
-
-function GetAnyLinkInheritedSrc(flavor, src=0, dst=0)
-{
-    local links = []
-    foreach (link in Link.GetAllInheritedSingle(flavor, src, dst))
-        links.append(link)
-    return links.len() > 0 ? links[Data.RandInt(0, links.len()-1)] : 0
-}
-
-function ParamGetString(name, result=null)
-{
-    local params = userparams()
-    if (name in params)
-        try
-            return params[name].tostring()
-        catch(err)
-            return ""
-    return result
-}
-
-function ParamGetInt(name, result=null)
-{
-    local params = userparams()
-    if (name in params)
+    function GetAnyLink(flavor, src=0, dst=0)
     {
-        try
-        {
-            result = params[name]
-            if (typeof result == "string" && result[0] == '$')
-                return Quest.Get(result.slice(1))
-            else
-                return result.tointeger()
-        }
-        catch(err)
-            return 0
+        local links = []
+        foreach (link in Link.GetAll(flavor,src,dst))
+            links.append(link)
+        return links.len() > 0 ? links[Data.RandInt(0, links.len()-1)] : 0
     }
-    return result
-}
 
-function ParamGetFloat(name, result=null)
-{
-    local params = userparams()
-    if (name in params)
-        try
-            return params[name].tofloat()
-        catch(err)
-            return 0.0
-    return result
-}
+    function GetAnyLinkInheritedSrc(flavor, src=0, dst=0)
+    {
+        local links = []
+        foreach (link in Link.GetAllInheritedSingle(flavor, src, dst))
+            links.append(link)
+        return links.len() > 0 ? links[Data.RandInt(0, links.len()-1)] : 0
+    }
 
-function ParamGetBool(name, result=null)
-{
-    local params = userparams()
-    if (name in params)
-        try
+    function ParamGetString(name, result=null)
+    {
+        local params = userparams()
+        if (name in params)
+            try
+                return params[name].tostring()
+            catch(err)
+                return ""
+        return result
+    }
+
+    function ParamGetInt(name, result=null)
+    {
+        local params = userparams()
+        if (name in params)
         {
-            result = params[name]
-            if (typeof result == "string")
+            try
             {
-                switch(result[0])
-                {
-                    case '1': case 't': case 'T': case 'y': case 'Y':
-                        return true
-                    case '$':
-                        return Quest.Get(result.slice(1)) != 0
-                    default:
-                        return result.tointeger() != 0
-                }
+                result = params[name]
+                if (typeof result == "string" && result[0] == '$')
+                    return Quest.Get(result.slice(1))
+                else
+                    return result.tointeger()
             }
-            else
-                return !!result
+            catch(err)
+                return 0
         }
-        catch(err)
-            return false
-    return result
-}
+        return result
+    }
 
-function ParamGetObject(name, result=null)
-{
-    local params = userparams()
-    if (name in params)
-        try
-            return ObjID(params[name])
-        catch(err)
-            return 0
-    return result
-}
+    function ParamGetFloat(name, result=null)
+    {
+        local params = userparams()
+        if (name in params)
+            try
+                return params[name].tofloat()
+            catch(err)
+                return 0.0
+        return result
+    }
 
-function ParamGetObjectRel(name, dst=0, src=0, result=null)
-{
-    local params = userparams()
-    if (name in params)
-        try
-        {
-            result = params[name].tostring().tolower()
-            if (result == "self")
-                return dst
-            if (result == "source")
-                return src
-            if (result[0] == '^')
-                return Object.FindClosestObjectNamed(dst, result.slice(1))
-            return ObjID(params[name])
-        }
-        catch(err)
-            return 0
-    return result
-}
+    function ParamGetBool(name, result=null)
+    {
+        local params = userparams()
+        if (name in params)
+            try
+            {
+                result = params[name]
+                if (typeof result == "string")
+                {
+                    switch(result[0])
+                    {
+                        case '1': case 't': case 'T': case 'y': case 'Y':
+                            return true
+                        case '$':
+                            return Quest.Get(result.slice(1)) != 0
+                        default:
+                            return result.tointeger() != 0
+                    }
+                }
+                else
+                    return !!result
+            }
+            catch(err)
+                return false
+        return result
+    }
+
+    function ParamGetObject(name, result=null)
+    {
+        local params = userparams()
+        if (name in params)
+            try
+                return ObjID(params[name])
+            catch(err)
+                return 0
+        return result
+    }
+
+    function ParamGetObjectRel(name, dst=0, src=0, result=null)
+    {
+        local params = userparams()
+        if (name in params)
+            try
+            {
+                result = params[name].tostring().tolower()
+                if (result == "self")
+                    return dst
+                if (result == "source")
+                    return src
+                if (result[0] == '^')
+                    return Object.FindClosestObjectNamed(dst, result.slice(1))
+                return ObjID(params[name])
+            }
+            catch(err)
+                return 0
+        return result
+    }
 
 }
-
 
 function FixupPlayerLinks(source, player)
 {
@@ -474,8 +473,8 @@ class CommandControl extends GenericControl
     function ControlString(control)
     {
         foreach (cmd in split(control, ";"))
-	    Debug.Command(cmd)
-	return true
+            Debug.Command(cmd)
+        return true
     }
 }
 
@@ -753,6 +752,249 @@ class ZeroGravRoom extends tnhRootScript
         if (Property.Possessed(room_obj, "RoomGrav"))
             gravity = Property.Get(room_obj, "RoomGrav")
         Property.Set(move_obj, "PhysAttr", "Gravity %", gravity)
+    }
+}
+
+
+class KnockOnDoor extends tnhRootScript
+{
+    function OnFrobWorldEnd()
+    {
+        if (Locked.IsLocked(self) && Door.GetDoorState(self) == eDoorStatus.kDoorClosed)
+	    foreach (owns_link in Link.GetAll("~Owns", self, 0))
+	    {
+	        local owner = LinkDest(owns_link)
+	        AI.Signal(owner, "knock_knock")
+		PostMessage(owner, "Interact", "knock_knock")
+	    }
+	Reply(true)
+    }
+}
+
+local DisplayBookText = class {
+    m_host = 0
+
+    constructor(host)
+    {
+        m_host = host
+    }
+
+}
+
+class OnScreenText extends GenericScript
+{
+    function DisplayBookPage(book, page)
+    {
+        local book_file = "..\\books\\" + book
+	local page_s = format("page_%d", page)
+        local page_text = Data.GetString(book_file, page_s, "", "strings")
+	if (str == "")
+	    return false
+	local str = null
+	local color = DefaultTextColor()
+	local time = 0
+	str = Data.GetString(book_file, page_s + "_color", "", "strings")
+	if (str != "")
+	    color = strtocolor(str)
+	str = Data.GetString(book_file, page_s + "_time", "", "strings")
+	if (str != "")
+	{
+	    local wait = strtotime(str)
+	    if (wait > 0)
+	        time = wait
+	}
+	if (time == 0)
+	{
+	    local count = 0, letter_count = 0, space_count = 0, is_space = false
+	    foreach (word in split(trim(page_text), " \r\n\t"))
+	    {
+	        if (word == "")
+		{
+		    if (!is_space)
+		    {
+		        if (++space_count == 3)
+		        {
+		            ++letter_count
+		            space_count = 0
+			    if (letter_count > 3)
+			    {
+				++count
+				letter_count = 0
+			    }
+		        }
+			is_space = true
+		    }
+		}
+		else
+		{
+		    if (word.len() + letter_count > 3)
+		    {
+		        ++count
+		        letter_count = 0
+			space_count = 0
+		    }
+		    else
+		        letter_count += word.len()
+                    is_space = false
+		}
+	    }
+	    time = 500 * (count < 10 ? 10 : count)
+	}
+	DisplayText(page_text, color, time)
+
+	str = Data.GetString(book_file, "page_s" + "_auto", "", "strings")
+	if (str != "")
+	{
+	    local wait = strtotime(str)
+	    if (wait > 0 || str[0] == '0')
+	    {
+	        if (wait > time)
+		    time = wait
+	    }
+	    else
+	        time = 0
+	}
+	else
+	    time = 0
+	page++
+	str = Data.GetString(book_file, page_s + "_next", "", "strings")
+	if (str != "")
+	    page = str.tointeger()
+	str = Data.GetString(book_file, format("page_%d", page), "", "strings")
+	if (str == "")
+	    page = 0
+	ChangeBookPage(book, page, time)
+
+	return true
+    }
+
+    function DisplayText(text, color, time)
+    {
+        DarkUI.TextMessage(text, color, time)
+    }
+
+    function DisplayPage(page)
+    {
+        if (!HasProperty("Book"))
+	{
+	    DebugString("Object has no book!")
+	    return false
+	}
+	local book = GetProperty("Book")
+	if (book.len() == 0)
+	{
+	    DebugString("Object has no book!")
+	    return false
+	}
+	return DisplayBookPage(book, page)
+    }
+
+    function ChangePage(page)
+    {
+        return SetData("page", page).tointeger()
+    }
+
+    function ChangeBookPage(book, page, time)
+    {
+        if (time > 0)
+	{
+	    if (IsDataSet("auto_scroll"))
+	    {
+	        KillTimer(GetData("auto_scroll"))
+		ClearData("auto_scroll")
+            }
+	    SetData("auto_scroll", SetOneShotTimer("AutoScroll", time))
+	}
+	return ChangePage(page)
+    }
+
+    function DefaultTextColor()
+    {
+        return RGB(255,255,255)
+    }
+
+    function OnBeginScript()
+    {
+	SetData("page", ParamGetInt("page", 0))
+    }
+
+    function OnTimer()
+    {
+        if (message().name == "AutoScroll")
+	{
+	    ClearData("auto_scroll")
+	    DisplayPage(GetData("page"))
+	}
+    }
+
+    function TurnOn()
+    {
+        if (IsDataSet("auto_scroll"))
+        {
+            KillTimer(GetData("auto_scroll"))
+            ClearData("auto_scroll")
+        }
+	local page = GetData("page")
+	if (page < 0)
+	    page = 0
+	DisplayPage(page)
+	Reply(true)
+    }
+
+    function Control()
+    {
+        local control = message().data
+	local op = '@'
+	local arg = -1
+	switch (typeof control)
+	{
+	    case "integer":
+	        arg = control; break
+	    case "float":
+	        arg = floor(control); break
+	    case "string":
+	        control = lstrip(control)
+		if (control[0] >= '0' && control[0] <= '9')
+		    arg = control.tointeger()
+		else
+		{
+		    op = control[0]
+		    control = control.slice(1)
+		    arg = control[0] == '.' ? 0x7FFFFFFF : control.tointeger()
+		}
+		break
+	    default:
+	        Reply(false)
+		return
+	}
+	if (arg > 0)
+	{
+	    local page = GetData("page")
+	    if (arg == 0x7FFFFFFF)
+	        arg = page
+            switch (op)
+	    {
+	        case '@':
+		    if (page != arg)
+		        ChangePage(arg)
+	            break
+		case '#':
+		    DisplayPage(arg); break
+		case '+':
+		    if (arg != 0)
+		        ChangePage(page + arg)
+	            break
+		case '-':
+		    if (arg != 0)
+		        ChangePage(arg > page ? 0 : page - arg)
+	            break
+		case '$':
+		default:
+		    Reply(false)
+		    return
+	    }
+	}
+	Reply(true)
     }
 }
 
