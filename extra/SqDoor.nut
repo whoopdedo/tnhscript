@@ -418,7 +418,7 @@ class SqNonAutoDoor extends SqDoor {
 // A SecurityDoor will make AI suspicious if its state changes.
 // This shows how to add to a function while still keeping the
 // same behavior.
-class SecurityDoor extends SqDoor {
+class SqSecurityDoor extends SqDoor {
 
     function OnSim() {
         if (message().starting) {
