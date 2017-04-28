@@ -96,6 +96,6 @@ function CalcTextTime(str) {
         }
     }
 
-    return 500 * (count < 10) ? 10 : count
+    return 500 * (count < 10 ? 10 : count)
 }
 

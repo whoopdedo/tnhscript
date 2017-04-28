@@ -41,7 +41,7 @@ class tnhRootScript extends SqRootScript {
         local links = []
         foreach (link in Link.GetAllInheritedSingle(flavor, src, dst))
             links.append(link)
-        return (links.len() > 0) ? links[Data.RandInt(0, links.len() - 1)] : 0
+        return links.len() > 0 ? links[Data.RandInt(0, links.len() - 1)] : 0
     }
 
     function ParamGetString(name, result = null) {
