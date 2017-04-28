@@ -18,10 +18,8 @@
 function FixupPlayerLinks(source, player)
 {
     local pflink = Link.GetOne("PlayerFactory")
-    if (pflink)
-    {
-        foreach (oldlink in Link.GetAll(null, source, sLink(pflink).source))
-        {
+    if (pflink) {
+        foreach (oldlink in Link.GetAll(null, source, sLink(pflink).source)) {
             local linkinfo = sLink(oldlink)
             local newlink = Link.Create(linkinfo.flavor, linkinfo.source, player)
             //local data = LinkTools.LinkGetData(oldlink, null)
@@ -37,95 +35,73 @@ class GenericScript extends tnhRootScript
     m_timing = 0.0
     m_flags = 0
 
-    function TurnOn() { }
-    function TurnOff() { }
-    function Control() { }
+    function TurnOn() {}
+    function TurnOff() {}
+    function Control() {}
 
-    function InitTrapVars()
-    {
-        if (HasProperty("ScriptTiming"))
-        {
+    function InitTrapVars() {
+        if (HasProperty("ScriptTiming")) {
             m_timing = GetProperty("ScriptTiming")
         }
-        if (HasProperty("TrapFlags"))
-        {
+        if (HasProperty("TrapFlags")) {
             m_flags = GetProperty("TrapFlags")
         }
     }
 
-    function IsLocked()
-    {
+    function IsLocked() {
         return Locked.IsLocked(self)
     }
 
-    function SetLock(lock)
-    {
+    function SetLock(lock) {
         local lockobj = LinkDest(Link.GetOne("Lock", self))
-        if (lockobj)
-        {
+        if (lockobj) {
             if (HasProperty("Locked"))
                 Property.Remove(self, "Locked")
             Property.SetSimple(lockobj, "Locked", lock)
-        }
-        else
-        {
+        } else {
             SetProperty("Locked", lock)
         }
     }
 
-    function FixupPlayerLinks()
-    {
+    function FixupPlayerLinks() {
         local player = ObjID("Player")
-        if (player)
-        {
+        if (player) {
             ::FixupPlayerLinks(self, player)
             return 0
-        }
-        else
-        {
+        } else {
             SetOneShotTimer("DelayedInit", 0.001, "FixupPlayerLinks")
         }
     }
 
-    function OnTimer()
-    {
-        if (message().name == "DelayedInit" && message().data == "FixupPlayerLinks")
-        {
+    function OnTimer() {
+        if (message().name == "DelayedInit" &&
+            message().data == "FixupPlayerLinks"
+        ) {
             local player = ObjID("Player")
             if (player)
                 ::FixupPlayerLinks(self, player)
-        }
-        else if (message().name == "TurnOn")
-        {
+        } else if (message().name == "TurnOn") {
             TurnOn()
-        }
-        else if (message().name == "TurnOff")
-        {
+        } else if (message().name == "TurnOff") {
             TurnOff()
         }
     }
 
-    function OnTurnOn()
-    {
+    function OnTurnOn() {
         InitTrapVars()
-        if ((m_flags & TRAPF_NOON))
+        if (m_flags & TRAPF_NOON)
             return
-        if (!IsLocked())
-        {
+        if (!IsLocked()) {
             local result = true
             local inversemsg
-            if (m_flags & TRAPF_INVERT)
-            {
+            if (m_flags & TRAPF_INVERT) {
                 result = TurnOff()
                 inversemsg = "TurnOn"
-            }
-            else
-            {
+            } else {
                 result = TurnOn()
                 inversemsg = "TurnOn"
             }
-            if (result)
-            {
+            if (result) {
                 if (m_timing > 0)
                     SetOneShotTimer(inversemsg, m_timing)
                 if (m_flags & TRAPF_ONCE)
@@ -134,56 +110,48 @@ class GenericScript extends tnhRootScript
         }
     }
 
-    function OnTurnOff()
-    {
+    function OnTurnOff() {
         InitTrapVars()
         if (m_flags & TRAPF_NOOFF)
             return
-        if (!IsLocked())
-        {
-            local result = (m_flags & TRAPF_INVERT) ? TurnOn() : TurnOff()
-            if (result)
-            {
+        if (!IsLocked()) {
+            local result = (m_flags & TRAPF_INVERT)
+                ? TurnOn()
+                : TurnOff()
+            if (result) {
                 if (m_flags & TRAPF_ONCE)
                     SetLock(true)
             }
         }
     }
 
-    function OnScriptControl()
-    {
+    function OnScriptControl() {
         InitTrapVars()
-        if (!IsLocked())
-        {
+        if (!IsLocked()) {
             Control()
         }
     }
 }
 
-class GenericTrap extends GenericScript
-{
-    function TurnOn()
-    {
+class GenericTrap extends GenericScript {
+
+    function TurnOn() {
         return Switch(true)
     }
 
-    function TurnOff()
-    {
+    function TurnOff() {
         return Switch(false)
     }
 
-    function Control()
-    {
+    function Control() {
         local control = message().data
         local turnon = false
-        if (typeof(control) == "string")
-        {
+        if (typeof control == "string") {
             if (control.lower() in ["on","turnon","true","yes"])
                 turnon = true
             else
                 turnon = false
-        }
-        else
+        } else
             turnon = !!control
         if (turnon)
             TurnOn()
@@ -192,121 +160,106 @@ class GenericTrap extends GenericScript
     }
 }
 
-class GenericTrigger extends tnhRootScript
-{
+class GenericTrigger extends tnhRootScript {
+
     m_flags = 0
 
-    function InitTrigVars()
-    {
-        if (HasProperty("TrapFlags"))
-        {
+    function InitTrigVars() {
+        if (HasProperty("TrapFlags")) {
             m_flags = GetProperty("TrapFlags")
         }
     }
 
-    function IsLocked()
-    {
+    function IsLocked() {
         return Locked.IsLocked(self)
     }
 
-    function SetLock(lock)
-    {
+    function SetLock(lock) {
         SetProperty("Locked", lock)
     }
 
-    function DoTurnOn(data = null)
-    {
+    function DoTurnOn(data = null) {
         if (m_flags & TRAPF_NOON)
             return
         if (m_flags & TRAPF_ONCE)
             SetLock(true)
-        CDSend((m_flags & TRAPF_INVERT) ? "TurnOff" : "TurnOn", data)
+        CDSend((m_flags & TRAPF_INVERT)
+            ? "TurnOff"
+            : "TurnOn", data)
     }
 
-    function DoTurnOff(data = null)
-    {
+    function DoTurnOff(data = null) {
         if (m_flags & TRAPF_NOOFF)
             return
         if (m_flags & TRAPF_ONCE)
             SetLock(true)
-        CDSend((m_flags & TRAPF_INVERT) ? "TurnOn" : "TurnOff", data)
+        CDSend((m_flags & TRAPF_INVERT)
+            ? "TurnOn"
+            : "TurnOff",
+            data)
     }
 }
 
-class GenericControl extends GenericScript
-{
-    function TurnOn()
-    {
-        if ("on" in userparams())
-        {
+class GenericControl extends GenericScript {
+
+    function TurnOn() {
+        if ("on" in userparams()) {
             return ControlString(userparams().on.tostring())
         }
         return false
     }
 
-    function TurnOff()
-    {
-        if ("off" in userparams())
-        {
+    function TurnOff() {
+        if ("off" in userparams()) {
             return ControlString(userparams().off.tostring())
         }
         return false
     }
 
-    function Control()
-    {
+    function Control() {
         if (typeof message().data == "string")
             return ControlString(message().data)
         return false
     }
 }
 
-class GenericScale extends GenericScript
-{
+class GenericScale extends GenericScript {
 
     m_scale_stim = 0
     m_scale_stim_msg = null
 
-    function Scale() { }
+    function Scale() {}
 
-    function InitStimMessage()
-    {
+    function InitStimMessage() {
         local params = userparams()
-        if (!m_scale_stim && "arcontrol" in params)
-        {
+        if (!m_scale_stim && "arcontrol" in params) {
             local stim = ObjID(params.arcontrol)
-            if (stim)
-            {
+            if (stim) {
                 m_scale_stim_msg = Object.GetName(stim) + "Stimulus"
                 //self["On"+m_scale_stim_msg] <= function() { return Stimulus() }
                 m_scale_stim = stim
-            }
-            else
-            {
+            } else {
                 Debug.Log("arcontrol stimulus not found")
                 m_scale_stim_msg = ""
             }
         }
     }
 
-    function OnMessage()
-    {
+    function OnMessage() {
         if (!m_scale_stim_msg)
             InitStimMessage()
         if (MessageIs(m_scale_stim_msg))
             Scale(message().intensity)
     }
 
-    function TurnOn()
-    {
+    function TurnOn() {
         local params = userparams()
         if ("on" in params)
             return Scale(params.on.tofloat())
         return false
     }
 
-    function TurnOff()
-    {
+    function TurnOff() {
         local scale = 0.0
         local params = userparams()
         if ("off" in params)
@@ -318,8 +271,7 @@ class GenericScale extends GenericScript
         return Scale(scale)
     }
 
-    function Control()
-    {
+    function Control() {
         Scale(message().data.tofloat())
     }
 }

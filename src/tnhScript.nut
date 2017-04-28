@@ -22,21 +22,18 @@
  *
  * Inherits: GenericControl
  */
-class ScriptController extends GenericControl
-{
-    function ControlString(control)
-    {
+class ScriptController extends GenericControl {
+
+    function ControlString(control) {
         local dest = ObjID(message().data2)
-        if (dest)
-        {
+        if (dest) {
             SendMessage(dest, "ScriptControl", control)
-        }
-        else
-        {
+        } else {
             CDSend("ScriptControl", self, control)
         }
         return true
     }
+
 }
 
 /********************
@@ -46,14 +43,14 @@ class ScriptController extends GenericControl
  *
  * Inherits: GenericControl
  */
-class CommandControl extends GenericControl
-{
-    function ControlString(control)
-    {
+class CommandControl extends GenericControl {
+
+    function ControlString(control) {
         foreach (cmd in split(control, ";"))
             Debug.Command(cmd)
         return true
     }
+
 }
 
 /***********************
@@ -65,27 +62,21 @@ class CommandControl extends GenericControl
  * Links: ControlDevice(TrapObject, TargetObject)
  * Parameters: x,y,z, dx,dy,dz, h,p,b, dh,dp,db, rotate_axes
  */
-class TrapMoveRelative extends GenericControl
-{
-    function IterateLinks(delta)
-    {
-         foreach (link in Link.GetAll("ControlDevice", self))
-         {
+class TrapMoveRelative extends GenericControl {
+
+    function IterateLinks(delta) {
+         foreach (link in Link.GetAll("ControlDevice", self)) {
              local target = LinkDest(link)
-             if (delta.rotate_axes)
-             {
+             if (delta.rotate_axes) {
                  Object.Teleport(target, delta.position, delta.facing, target)
-             }
-             else
-             {
+             } else {
                  local destpos = Object.Position(target)
                  destpos += delta.position
                  local destfacing = Object.Facing(target)
                  destfacing += delta.facing
                  Object.Teleport(target, destpos, destfacing, 0)
              }
-             if (Property.Possessed(target, "PhysState"))
-             {
+             if (Property.Possessed(target, "PhysState")) {
                  local vels = Property.Get(target, "PhysState", "Velocity")
                  vels += delta.velocity
                  Property.Set(target, "PhysState", "Velocity", vels)
@@ -97,8 +88,7 @@ class TrapMoveRelative extends GenericControl
          return true
     }
 
-    function ControlString(control)
-    {
+    function ControlString(control) {
         local group_pat = regexp(@"; *((\\;|[^;])*)")
         local number_pat = regexp(@"^(\w+) *= *([\+\-]?(\d+(\.\d*)?|\.\d+))")
         local delta = {
@@ -109,18 +99,15 @@ class TrapMoveRelative extends GenericControl
             rotate_axes = false
         }
         control = ";"+control
-        for (group=null, i=0; i < control.len(); i = group[0].end+1)
-        {
+        for (group = null, i = 0; i < control.len(); i = group[0].end + 1) {
             group = group_pat.capture(a, i)
             if (!group)
                 break
             local cap = control.slice(group[1].begin, group[1].end)
             local match = number_pat.capture(cap)
-            if (match)
-            {
+            if (match) {
                 local value = cap.slice(match[2].begin, match[2].end).tofloat()
-                switch(cap.slice(match[1].begin, match[1].end))
-                {
+                switch(cap.slice(match[1].begin, match[1].end)) {
                     case "x":
                         delta.position.x = value; break
                     case "y":
@@ -153,8 +140,7 @@ class TrapMoveRelative extends GenericControl
         return IterateLinks(delta)
     }
 
-    function TurnOn()
-    {
+    function TurnOn() {
         local params = userparams()
         local delta = {
             position = vector("x" in params ? params.x : 0.0,
@@ -174,8 +160,7 @@ class TrapMoveRelative extends GenericControl
         return IterateLinks(delta)
     }
 
-    function OnSim()
-    {
+    function OnSim() {
         if (message().starting)
             FixupPlayerLinks()
     }
@@ -189,26 +174,19 @@ class TrapMoveRelative extends GenericControl
  * Inherits: GenericTrap
  * Parameters: nolens, static, forcereturn
  */
-class TrapCamAttach extends GenericTrap
-{
-    function Switch(turnon)
-    {
-        if (turnon)
-        {
-            if (ParamGetBool("nolens"))
-            {
+class TrapCamAttach extends GenericTrap {
+
+    function Switch(turnon) {
+        if (turnon) {
+            if (ParamGetBool("nolens")) {
                 Debug.Command("cam_attach ",self)
-            }
-            else
-            {
+            } else {
                 if (ParamGetBool("static"))
                     Camera.StaticAttach(self)
                 else
                     Camera.DynamicAttach(self)
             }
-        }
-        else
-        {
+        } else {
             if (ParamGetBool("forcereturn"))
                 Camera.ForceCameraReturn()
             else
@@ -225,19 +203,15 @@ class TrapCamAttach extends GenericTrap
  * Inherits: GenericScale
  * Parameters: freeze_speed, freeze_name
  */
-class TrapFreezePlayer extends GenericScale
-{
+class TrapFreezePlayer extends GenericScale {
 
-    function OnBeginScript()
-    {
+    function OnBeginScript() {
         if (!IsDataSet("is_frozen"))
             SetData("is_frozen", false)
     }
 
-    function TurnOn()
-    {
-        if (!GetData("is_frozen"))
-        {
+    function TurnOn() {
+        if (!GetData("is_frozen")) {
             local value = ParamGetFloat("freeze_speed", 0.0)
             DrkInv.AddSpeedControl(ParamGetString("freeze_name", "Freeze"), value, value)
             SetData("is_frozen", true)
@@ -245,18 +219,15 @@ class TrapFreezePlayer extends GenericScale
         return true
     }
 
-    function TurnOff()
-    {
-        if (GetData("is_frozen"))
-        {
+    function TurnOff() {
+        if (GetData("is_frozen")) {
             DrkInv.RemoveSpeedControl(ParamGetString("freeze_name", "Freeze"))
             SetData("is_frozen", false)
         }
         return true
     }
 
-    function Scale(value)
-    {
+    function Scale(value) {
             local name = ParamGetString("freeze_name", "Freeze")
             if (GetData("is_frozen"))
                 DrkInv.RemoveSpeedControl(name)
@@ -279,30 +250,25 @@ class TrapFreezePlayer extends GenericScale
  * Messages: TurnOn
  * Links: RenderFlash(TrapObject, FlashArchetype), SoundDescription(TrapObject, SchemaArchetype)
  */
-class TrapRenderFlash extends GenericTrap
-{
-    function Switch(turnon)
-    {
-        if (GetAPIVersion() < 8)
-        {
+class TrapRenderFlash extends GenericTrap {
+
+    function Switch(turnon) {
+        if (GetAPIVersion() < 8) {
             Debug.MPrint("TrapRenderFlash requires Thief v1.24 or SS2 v2.45")
             return
         }
-        if (turnon)
-        {
+        if (turnon) {
             local player = ObjID("Player")
             local avatar = Object.Archetype(player)
             local flavor = linkkind("RenderFlash")
             local flashlink = GetAnyLinkInheritedSrc(flavor, self)
-            if (!flashlink)
-            {
+            if (!flashlink) {
                 Debug.MPrint("RenderFlash could not be found")
                 return
             }
             local olddest = 0
             local oldlink = Link.GetOne(flavor, avatar)
-            if (oldlink)
-            {
+            if (oldlink) {
                 olddest = LinkDest(oldlink)
                 Link.Destroy(oldlink)
             }
@@ -326,16 +292,12 @@ class TrapRenderFlash extends GenericTrap
  *
  * Inherits: GenericScale
  */
-class TrapFadeOut extends GenericScale
-{
+class TrapFadeOut extends GenericScale {
 }
 
-if (GetAPIVersion() >= 8)
-{
-    function TrapFadeOut::Scale(value)
-    {
-        if (value < 0)
-        {
+if (GetAPIVersion() >= 8) {
+    function TrapFadeOut::Scale(value) {
+        if (value < 0) {
             DarkGame.FadeToBlack(-1)
             //DarkGame.FadeIn(-value) // Not working. Is the API broken?
         }
@@ -343,17 +305,13 @@ if (GetAPIVersion() >= 8)
             DarkGame.FadeToBlack(value)
         return true
     }
-}
-else
-{
-    function TrapFadeOut::Scale(value)
-    {
+} else {
+    function TrapFadeOut::Scale(value) {
         DarkGame.FadeToBlack(value)
         return true
     }
 
-    function TrapFadeOut::TurnOff()
-    {
+    function TrapFadeOut::TurnOff() {
         DarkGame.FadeToBlack(-1);
         Reply(true)
     }
@@ -368,17 +326,14 @@ else
  * 
  * Messages: PlayerRoomEnter, PlayerRoomExit
  */
-class ZeroGravRoom extends tnhRootScript
-{
-    function OnPlayerRoomEnter()
-    {
+class ZeroGravRoom extends tnhRootScript {
+    function OnPlayerRoomEnter() {
         local move_obj = message().MoveObjId
         Property.Set(move_obj, "PhysAttr", "Gravity %", 0.0)
         Property.Set(move_obj, "PhysAttr", "Base Friction", 1.0)
     }
 
-    function OnPlayerRoomExit()
-    {
+    function OnPlayerRoomExit() {
         local move_obj = message().MoveObjId
         local room_obj = message().ToObjId
         local gravity = 100.0

@@ -26,13 +26,13 @@
  * Links: Owns(AIToSignal, DoorObject)
  * Signals: knock_knock
  */
-class KnockOnDoor extends tnhRootScript
-{
-    function OnFrobWorldEnd()
-    {
-        if (Locked.IsLocked(self) && Door.GetDoorState(self) == eDoorStatus.kDoorClosed)
-            foreach (owns_link in Link.GetAll("~Owns", self, 0))
-            {
+class KnockOnDoor extends tnhRootScript {
+
+    function OnFrobWorldEnd() {
+        if (Locked.IsLocked(self) &&
+            Door.GetDoorState(self) == eDoorStatus.kDoorClosed
+        )
+            foreach (owns_link in Link.GetAll("~Owns", self, 0)) {
                 local owner = LinkDest(owns_link)
                 AI.Signal(owner, "knock_knock")
                 PostMessage(owner, "Interact", "knock_knock")
@@ -42,10 +42,10 @@ class KnockOnDoor extends tnhRootScript
 }
 
 local DisplayBookText = class {
+
     m_host = 0
 
-    constructor(host)
-    {
+    constructor(host) {
         m_host = host
     }
 
@@ -85,10 +85,9 @@ local DisplayBookText = class {
  * Properties: Book
  * Strings: page_n, page_n_color, page_n_time, page_n_auto, page_n_next
  */
-class OnScreenText extends GenericScript
-{
-    function DisplayBookPage(book, page)
-    {
+class OnScreenText extends GenericScript {
+
+    function DisplayBookPage(book, page) {
         local book_file = "..\\books\\" + book
         local page_s = format("page_%d", page)
         local page_text = Data.GetString(book_file, page_s, "", "strings")
@@ -101,31 +100,25 @@ class OnScreenText extends GenericScript
         if (str != "")
             color = strtocolor(str)
         str = Data.GetString(book_file, page_s + "_time", "", "strings")
-        if (str != "")
-        {
+        if (str != "") {
             local wait = strtotime(str)
             if (wait > 0)
                 time = wait
         }
-        if (time == 0)
-        {
+        if (time == 0) {
             time = CalcTextTime(page_text)
         }
         DisplayText(page_text, color, time)
 
         str = Data.GetString(book_file, "page_s" + "_auto", "", "strings")
-        if (str != "")
-        {
+        if (str != "") {
             local wait = strtotime(str)
-            if (wait > 0 || str[0] == '0')
-            {
+            if (wait > 0 || str[0] == '0') {
                 if (wait > time)
                     time = wait
-            }
-            else
+            } else
                 time = 0
-        }
-        else
+        } else
             time = 0
         page++
         str = Data.GetString(book_file, page_s + "_next", "", "strings")
@@ -139,38 +132,30 @@ class OnScreenText extends GenericScript
         return true
     }
 
-    function DisplayText(text, color, time)
-    {
+    function DisplayText(text, color, time) {
         DarkUI.TextMessage(text, color, time)
     }
 
-    function DisplayPage(page)
-    {
-        if (!HasProperty("Book"))
-        {
+    function DisplayPage(page) {
+        if (!HasProperty("Book")) {
             DebugString("Object has no book!")
             return false
         }
         local book = GetProperty("Book")
-        if (book.len() == 0)
-        {
+        if (book.len() == 0) {
             DebugString("Object has no book!")
             return false
         }
         return DisplayBookPage(book, page)
     }
 
-    function ChangePage(page)
-    {
+    function ChangePage(page) {
         return SetData("page", page).tointeger()
     }
 
-    function ChangeBookPage(book, page, time)
-    {
-        if (time > 0)
-        {
-            if (IsDataSet("auto_scroll"))
-            {
+    function ChangeBookPage(book, page, time) {
+        if (time > 0) {
+            if (IsDataSet("auto_scroll")) {
                 KillTimer(GetData("auto_scroll"))
                 ClearData("auto_scroll")
             }
@@ -179,29 +164,23 @@ class OnScreenText extends GenericScript
         return ChangePage(page)
     }
 
-    function DefaultTextColor()
-    {
+    function DefaultTextColor() {
         return 0xFFFFFF //RGB(255,255,255)
     }
 
-    function OnBeginScript()
-    {
+    function OnBeginScript() {
         SetData("page", ParamGetInt("page", 0))
     }
 
-    function OnTimer()
-    {
-        if (message().name == "AutoScroll")
-        {
+    function OnTimer() {
+        if (message().name == "AutoScroll") {
             ClearData("auto_scroll")
             DisplayPage(GetData("page"))
         }
     }
 
-    function TurnOn()
-    {
-        if (IsDataSet("auto_scroll"))
-        {
+    function TurnOn() {
+        if (IsDataSet("auto_scroll")) {
             KillTimer(GetData("auto_scroll"))
             ClearData("auto_scroll")
         }
@@ -212,63 +191,57 @@ class OnScreenText extends GenericScript
         Reply(true)
     }
 
-    function Control()
-    {
+    function Control() {
         local control = message().data
         local op = '@'
         local arg = -1
         try
-            switch (typeof control)
-            {
-                case "integer":
-                    arg = control; break
-                case "float":
-                    arg = control.tointeger(); break
-                case "string":
-                    control = lstrip(control)
-                    if (control[0] >= '0' && control[0] <= '9')
-                        arg = control.tointeger()
-                    else
-                    {
-                        op = control[0]
-                        control = control.slice(1)
-                        arg = control[0] == '.' ? 0x7FFFFFFF : control.tointeger()
-                    }
-                    break
-                default:
-                    Reply(false)
-                    return
+            switch (typeof control) {
+            case "integer":
+                arg = control; break
+            case "float":
+                arg = control.tointeger(); break
+            case "string":
+                control = lstrip(control)
+                if (control[0] >= '0' && control[0] <= '9')
+                    arg = control.tointeger()
+                else {
+                    op = control[0]
+                    control = control.slice(1)
+                    arg = control[0] == '.' ? 0x7FFFFFFF : control.tointeger()
+                }
+                break
+            default:
+                Reply(false)
+                return
             }
-        catch(err)
-        {
+        catch(err) {
             Reply(false)
             return
         }
-        if (arg > 0)
-        {
+        if (arg > 0) {
             local page = GetData("page")
             if (arg == 0x7FFFFFFF)
                 arg = page
-            switch (op)
-            {
-                case '@':
-                    if (page != arg)
-                        ChangePage(arg)
-                    break
-                case '#':
-                    DisplayPage(arg); break
-                case '+':
-                    if (arg != 0)
-                        ChangePage(page + arg)
-                    break
-                case '-':
-                    if (arg != 0)
-                        ChangePage(arg > page ? 0 : page - arg)
-                    break
-                case '$':
-                default:
-                    Reply(false)
-                    return
+            switch (op) {
+            case '@':
+                if (page != arg)
+                    ChangePage(arg)
+                break
+            case '#':
+                DisplayPage(arg); break
+            case '+':
+                if (arg != 0)
+                    ChangePage(page + arg)
+                break
+            case '-':
+                if (arg != 0)
+                    ChangePage(arg > page ? 0 : page - arg)
+                break
+            case '$':
+            default:
+                Reply(false)
+                return
             }
         }
         Reply(true)
