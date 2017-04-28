@@ -110,7 +110,7 @@ class OnScreenText extends GenericScript {
         }
         DisplayText(page_text, color, time)
 
-        str = Data.GetString(book_file, "page_s" + "_auto", "", "strings")
+        str = Data.GetString(book_file, page_s + "_auto", "", "strings")
         if (str != "") {
             local wait = strtotime(str)
             if (wait > 0 || str[0] == '0') {
