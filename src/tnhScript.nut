@@ -307,7 +307,7 @@ class TrapRenderFlash extends GenericTrap
                 Link.Destroy(oldlink)
             }
             local newlink = Link.Create(flavor, avatar, LinkDest(flashlink))
-            local schema = GetAnyLink(linkkind("SoundDescription"), self)
+            local schema = GetAnyLink("SoundDescription", self)
             if (schema)
                 Sound.PlaySchemaAmbient(player, LinkDest(schema))
             Camera.StaticAttach(player)
