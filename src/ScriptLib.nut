@@ -15,7 +15,7 @@
  * at <https://github.com/whoopdedo/tnhscript>
  ****************************************************************************/
 
-local function strtotime(str) {
+function strtotime(str) {
     local match = regexp(@"^\s*((?:\d+(?:\.\d*)?)|(?:\.\d+))([MmSs]?)").capture(str)
     if (match) {
         local num = str.slice(match[1].begin, match[1].end).tofloat()
@@ -29,27 +29,27 @@ local function strtotime(str) {
     return 0
 }
 
-local ColorNames = {
-        black   = 0x000000
-        silver  = 0xC0C0C0
-        gray    = 0x808080
-        grey    = 0x808080
-        white   = 0xFFFFFF
-        maroon  = 0x000080
-        red     = 0x0000FF
-        purple  = 0x800080
-        fuchsia = 0xFF00FF
-        green   = 0x008000
-        lime    = 0x00FF00
-        olive   = 0x008080
-        yellow  = 0x00FFFF
-        navy    = 0x800000
-        blue    = 0xFF0000
-        teal    = 0x808000
-        aqua    = 0xFFFF00
-}
+function strtocolor(str) {
+    local ColorNames = {
+            black   = 0x000000
+            silver  = 0xC0C0C0
+            gray    = 0x808080
+            grey    = 0x808080
+            white   = 0xFFFFFF
+            maroon  = 0x000080
+            red     = 0x0000FF
+            purple  = 0x800080
+            fuchsia = 0xFF00FF
+            green   = 0x008000
+            lime    = 0x00FF00
+            olive   = 0x008080
+            yellow  = 0x00FFFF
+            navy    = 0x800000
+            blue    = 0xFF0000
+            teal    = 0x808000
+            aqua    = 0xFFFF00
+    }
 
-local function strtocolor(str) {
     str = str.tolower()
     if (str in ColorNames)
         return ColorNames[str]
@@ -69,11 +69,12 @@ local function strtocolor(str) {
     return 0
 }
 
-local function CalcTextTime(str) {
+function CalcTextTime(str) {
     local count = 0,
           letter_count = 0,
           space_count = 0,
           is_space = false
+
     foreach (word in split(strip(str), " \r\n\t")) {
         if (word == "") {
             if (is_space) {
@@ -94,6 +95,7 @@ local function CalcTextTime(str) {
             is_space = false
         }
     }
+
     return 500 * (count < 10) ? 10 : count
 }
 
