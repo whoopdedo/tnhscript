@@ -14,16 +14,14 @@
  * The source code and GNU General Public License can be accessed
  * at <https://github.com/whoopdedo/tnhscript>
  ****************************************************************************/
-Debug.Log("tnhScript 3, Copyright (C) 2017 Tom N Harris <telliamed@whoopdedo.org>\n"
-  +"This program comes with ABSOLUTELY NO WARRANTY. This is free software,"
-  +"and you are welcome to redistribute it under certain conditions; see"
-  +"the source code or <https://github.com/whoopdedo/tnhscript> for details.")
+Debug.Log("tnhScript 3, Copyright (C) 2017 Tom N Harris <telliamed@whoopdedo.org>\n" +
+    "This program comes with ABSOLUTELY NO WARRANTY. This is free software," +
+    "and you are welcome to redistribute it under certain conditions; see" +
+    "the source code or <https://github.com/whoopdedo/tnhscript> for details.")
 
-local function strtotime(str)
-{
+function strtotime(str) {
     local match = regexp(@"^\s*((?:\d+(?:\.\d*)?)|(?:\.\d+))([MmSs]?)").capture(str)
-    if (match)
-    {
+    if (match) {
         local num = str.slice(match[1].begin, match[1].end).tofloat()
         local suffix = match.len() == 3 ? str.slice(match[2].begin, match[2].end).tolower() : ""
         if (suffix == "m")
@@ -35,205 +33,177 @@ local function strtotime(str)
     return 0
 }
 
-local ColorNames = 
-{
-        black   = 0x000000
-        silver  = 0xC0C0C0
-        gray    = 0x808080
-        grey    = 0x808080
-        white   = 0xFFFFFF
-        maroon  = 0x000080
-        red     = 0x0000FF
-        purple  = 0x800080
-        fuchsia = 0xFF00FF
-        green   = 0x008000
-        lime    = 0x00FF00
-        olive   = 0x008080
-        yellow  = 0x00FFFF
-        navy    = 0x800000
-        blue    = 0xFF0000
-        teal    = 0x808000
-        aqua    = 0xFFFF00
-}
+function strtocolor(str) {
+    local ColorNames = {
+            black   = 0x000000
+            silver  = 0xC0C0C0
+            gray    = 0x808080
+            grey    = 0x808080
+            white   = 0xFFFFFF
+            maroon  = 0x000080
+            red     = 0x0000FF
+            purple  = 0x800080
+            fuchsia = 0xFF00FF
+            green   = 0x008000
+            lime    = 0x00FF00
+            olive   = 0x008080
+            yellow  = 0x00FFFF
+            navy    = 0x800000
+            blue    = 0xFF0000
+            teal    = 0x808000
+            aqua    = 0xFFFF00
+    }
 
-local function strtocolor(str)
-{
     str = str.tolower()
     if (str in ColorNames)
         return ColorNames[str]
-    if (str[0] == '#')
-    {
+    if (str[0] == '#') {
         local r = str.slice(1,3).tointeger(16),
               g = str.slice(3,5).tointeger(16),
               b = str.slice(5,7).tointeger(16);
-        return b<<16 | g<<8 | r
+        return b << 16 | g << 8 | r
     }
     local match = regexp(@"(\d+) *, *(\d+) *, *(\d+)").capture(str)
-    if (match)
-    {
+    if (match) {
         local r = str.slice(match[1].begin,match[1].end).tointeger(16),
               g = str.slice(match[1].begin,match[1].end).tointeger(16),
               b = str.slice(match[1].begin,match[1].end).tointeger(16);
-        return b<<16 | g<<8 | r
+        return b << 16 | g << 8 | r
     }
     return 0
 }
 
-local function CalcTextTime(str)
-{
-    local count = 0, letter_count = 0, space_count = 0, is_space = false
-    foreach (word in split(strip(str), " \r\n\t"))
-    {
-        if (word == "")
-        {
-            if (is_space)
-            {
-                if (++space_count == 3)
-                {
+function CalcTextTime(str) {
+    local count = 0,
+          letter_count = 0,
+          space_count = 0,
+          is_space = false
+
+    foreach (word in split(strip(str), " \r\n\t")) {
+        if (word == "") {
+            if (is_space) {
+                if (++space_count == 3) {
                     ++letter_count
                     space_count = 0
                 }
-            }
-            else
-            {
+            } else {
                 is_space = true
             }
-        }
-        else
-        {
-            if (word.len() + letter_count > 3)
-            {
+        } else {
+            if (word.len() + letter_count > 3) {
                 ++count
                 letter_count = 0
                 space_count = 0
-            }
-            else
+            } else
                 letter_count += word.len()
             is_space = false
         }
     }
+
     return 500 * (count < 10 ? 10 : count)
 }
 
 
-class tnhRootScript extends SqRootScript
-{
-    function DebugString(str)
-    {
+class tnhRootScript extends SqRootScript {
+
+    function DebugString(str) {
 //@if DEBUG
         print(str)
 //@endif
     }
 
-    function CDSend(message, data=null)
-    {
+    function CDSend(message, data = null) {
         if (data == null)
             Link.BroadcastOnAllLinks(self, message, "ControlDevice")
         else
             Link.BroadcastOnAllLinksData(self, message, "ControlDevice", data)
     }
 
-    function GetAnyLink(flavor, src=0, dst=0)
-    {
+    function GetAnyLink(flavor, src = 0, dst = 0) {
         local links = []
         foreach (link in Link.GetAll(flavor,src,dst))
             links.append(link)
-        return links.len() > 0 ? links[Data.RandInt(0, links.len()-1)] : 0
+        return links.len() > 0 ? links[Data.RandInt(0, links.len() - 1)] : 0
     }
 
-    function GetAnyLinkInheritedSrc(flavor, src=0, dst=0)
-    {
+    function GetAnyLinkInheritedSrc(flavor, src = 0, dst = 0) {
         local links = []
         foreach (link in Link.GetAllInheritedSingle(flavor, src, dst))
             links.append(link)
-        return links.len() > 0 ? links[Data.RandInt(0, links.len()-1)] : 0
+        return links.len() > 0 ? links[Data.RandInt(0, links.len() - 1)] : 0
     }
 
-    function ParamGetString(name, result=null)
-    {
+    function ParamGetString(name, result = null) {
         local params = userparams()
         if (name in params)
             try
                 return params[name].tostring()
-            catch(err)
+            catch (err)
                 return ""
         return result
     }
 
-    function ParamGetInt(name, result=null)
-    {
+    function ParamGetInt(name, result = null) {
         local params = userparams()
-        if (name in params)
-        {
-            try
-            {
+        if (name in params) {
+            try {
                 result = params[name]
                 if (typeof result == "string" && result[0] == '$')
                     return Quest.Get(result.slice(1))
                 else
                     return result.tointeger()
-            }
-            catch(err)
+            } catch (err)
                 return 0
         }
         return result
     }
 
-    function ParamGetFloat(name, result=null)
-    {
+    function ParamGetFloat(name, result = null) {
         local params = userparams()
         if (name in params)
             try
                 return params[name].tofloat()
-            catch(err)
+            catch (err)
                 return 0.0
         return result
     }
 
-    function ParamGetBool(name, result=null)
-    {
+    function ParamGetBool(name, result = null) {
         local params = userparams()
         if (name in params)
-            try
-            {
+            try {
                 result = params[name]
-                if (typeof result == "string")
-                {
-                    switch(result[0])
-                    {
-                        case '1': case 't': case 'T': case 'y': case 'Y':
-                            return true
-                        case '$':
-                            return Quest.Get(result.slice(1)) != 0
-                        default:
-                            return result.tointeger() != 0
+                if (typeof result == "string") {
+                    switch (result[0]) {
+                    case '1': case 't': case 'T': case 'y': case 'Y':
+                        return true
+                    case '$':
+                        return Quest.Get(result.slice(1)) != 0
+                    default:
+                        return result.tointeger() != 0
                     }
                 }
                 else
                     return !!result
-            }
-            catch(err)
+            } catch (err)
                 return false
         return result
     }
 
-    function ParamGetObject(name, result=null)
-    {
+    function ParamGetObject(name, result = null) {
         local params = userparams()
         if (name in params)
             try
                 return ObjID(params[name])
-            catch(err)
+            catch (err)
                 return 0
         return result
     }
 
-    function ParamGetObjectRel(name, dst=0, src=0, result=null)
-    {
+    function ParamGetObjectRel(name, dst = 0, src = 0, result = null) {
         local params = userparams()
         if (name in params)
-            try
-            {
+            try {
                 result = params[name].tostring().tolower()
                 if (result == "self")
                     return dst
@@ -242,8 +212,7 @@ class tnhRootScript extends SqRootScript
                 if (result[0] == '^')
                     return Object.FindClosestObjectNamed(dst, result.slice(1))
                 return ObjID(params[name])
-            }
-            catch(err)
+            } catch (err)
                 return 0
         return result
     }
@@ -253,10 +222,8 @@ class tnhRootScript extends SqRootScript
 function FixupPlayerLinks(source, player)
 {
     local pflink = Link.GetOne("PlayerFactory")
-    if (pflink)
-    {
-        foreach (oldlink in Link.GetAll(null, source, sLink(pflink).source))
-        {
+    if (pflink) {
+        foreach (oldlink in Link.GetAll(null, source, sLink(pflink).source)) {
             local linkinfo = sLink(oldlink)
             local newlink = Link.Create(linkinfo.flavor, linkinfo.source, player)
             Link.Destroy(oldlink)
@@ -269,96 +236,74 @@ class GenericScript extends tnhRootScript
     m_timing = 0.0
     m_flags = 0
 
-    function TurnOn() { }
-    function TurnOff() { }
-    function Control() { }
+    function TurnOn() {}
+    function TurnOff() {}
+    function Control() {}
 
-    function InitTrapVars()
-    {
-        if (HasProperty("ScriptTiming"))
-        {
-            m_timing = GetProperty("ScriptTiming")
+    function InitTrapVars() {
+        if (HasProperty("ScriptTiming")) {
+            m_timing = GetProperty("ScriptTiming") / 1000.0
         }
-        if (HasProperty("TrapFlags"))
-        {
+        if (HasProperty("TrapFlags")) {
             m_flags = GetProperty("TrapFlags")
         }
     }
 
-    function IsLocked()
-    {
+    function IsLocked() {
         return Locked.IsLocked(self)
     }
 
-    function SetLock(lock)
-    {
+    function SetLock(lock) {
         local lockobj = LinkDest(Link.GetOne("Lock", self))
-        if (lockobj)
-        {
+        if (lockobj) {
             if (HasProperty("Locked"))
                 Property.Remove(self, "Locked")
             Property.SetSimple(lockobj, "Locked", lock)
-        }
-        else
-        {
+        } else {
             SetProperty("Locked", lock)
         }
     }
 
-    function FixupPlayerLinks()
-    {
+    function FixupPlayerLinks() {
         local player = ObjID("Player")
-        if (player)
-        {
+        if (player) {
             ::FixupPlayerLinks(self, player)
             return 0
-        }
-        else
-        {
+        } else {
             SetOneShotTimer("DelayedInit", 0.001, "FixupPlayerLinks")
         }
     }
 
-    function OnTimer()
-    {
-        if (message().name == "DelayedInit" && message().data == "FixupPlayerLinks")
-        {
+    function OnTimer() {
+        if (message().name == "DelayedInit" &&
+            message().data == "FixupPlayerLinks"
+        ) {
             local player = ObjID("Player")
             if (player)
                 ::FixupPlayerLinks(self, player)
-        }
-        else if (message().name == "TurnOn")
-        {
+        } else if (message().name == "TurnOn") {
             TurnOn()
-        }
-        else if (message().name == "TurnOff")
-        {
+        } else if (message().name == "TurnOff") {
             TurnOff()
         }
     }
 
-    function OnTurnOn()
-    {
+    function OnTurnOn() {
         InitTrapVars()
-        if ((m_flags & TRAPF_NOON))
+        if (m_flags & TRAPF_NOON)
             return
-        if (!IsLocked())
-        {
+        if (!IsLocked()) {
             local result = true
             local inversemsg
-            if (m_flags & TRAPF_INVERT)
-            {
+            if (m_flags & TRAPF_INVERT) {
                 result = TurnOff()
                 inversemsg = "TurnOn"
-            }
-            else
-            {
+            } else {
                 result = TurnOn()
                 inversemsg = "TurnOn"
             }
-            if (result)
-            {
-                if (m_timing > 0)
+            if (result) {
+                if (m_timing >= 0.001)
                     SetOneShotTimer(inversemsg, m_timing)
                 if (m_flags & TRAPF_ONCE)
                     SetLock(true)
@@ -366,56 +311,48 @@ class GenericScript extends tnhRootScript
         }
     }
 
-    function OnTurnOff()
-    {
+    function OnTurnOff() {
         InitTrapVars()
         if (m_flags & TRAPF_NOOFF)
             return
-        if (!IsLocked())
-        {
-            local result = (m_flags & TRAPF_INVERT) ? TurnOn() : TurnOff()
-            if (result)
-            {
+        if (!IsLocked()) {
+            local result = (m_flags & TRAPF_INVERT)
+                ? TurnOn()
+                : TurnOff()
+            if (result) {
                 if (m_flags & TRAPF_ONCE)
                     SetLock(true)
             }
         }
     }
 
-    function OnScriptControl()
-    {
+    function OnScriptControl() {
         InitTrapVars()
-        if (!IsLocked())
-        {
+        if (!IsLocked()) {
             Control()
         }
     }
 }
 
-class GenericTrap extends GenericScript
-{
-    function TurnOn()
-    {
+class GenericTrap extends GenericScript {
+
+    function TurnOn() {
         return Switch(true)
     }
 
-    function TurnOff()
-    {
+    function TurnOff() {
         return Switch(false)
     }
 
-    function Control()
-    {
+    function Control() {
         local control = message().data
         local turnon = false
-        if (typeof(control) == "string")
-        {
+        if (typeof control == "string") {
             if (control.lower() in ["on","turnon","true","yes"])
                 turnon = true
             else
                 turnon = false
-        }
-        else
+        } else
             turnon = !!control
         if (turnon)
             TurnOn()
@@ -424,120 +361,105 @@ class GenericTrap extends GenericScript
     }
 }
 
-class GenericTrigger extends tnhRootScript
-{
+class GenericTrigger extends tnhRootScript {
+
     m_flags = 0
 
-    function InitTrigVars()
-    {
-        if (HasProperty("TrapFlags"))
-        {
+    function InitTrigVars() {
+        if (HasProperty("TrapFlags")) {
             m_flags = GetProperty("TrapFlags")
         }
     }
 
-    function IsLocked()
-    {
+    function IsLocked() {
         return Locked.IsLocked(self)
     }
 
-    function SetLock(lock)
-    {
+    function SetLock(lock) {
         SetProperty("Locked", lock)
     }
 
-    function DoTurnOn(data = null)
-    {
+    function DoTurnOn(data = null) {
         if (m_flags & TRAPF_NOON)
             return
         if (m_flags & TRAPF_ONCE)
             SetLock(true)
-        CDSend((m_flags & TRAPF_INVERT) ? "TurnOff" : "TurnOn", data)
+        CDSend((m_flags & TRAPF_INVERT)
+            ? "TurnOff"
+            : "TurnOn", data)
     }
 
-    function DoTurnOff(data = null)
-    {
+    function DoTurnOff(data = null) {
         if (m_flags & TRAPF_NOOFF)
             return
         if (m_flags & TRAPF_ONCE)
             SetLock(true)
-        CDSend((m_flags & TRAPF_INVERT) ? "TurnOn" : "TurnOff", data)
+        CDSend((m_flags & TRAPF_INVERT)
+            ? "TurnOn"
+            : "TurnOff",
+            data)
     }
 }
 
-class GenericControl extends GenericScript
-{
-    function TurnOn()
-    {
-        if ("on" in userparams())
-        {
+class GenericControl extends GenericScript {
+
+    function TurnOn() {
+        if ("on" in userparams()) {
             return ControlString(userparams().on.tostring())
         }
         return false
     }
 
-    function TurnOff()
-    {
-        if ("off" in userparams())
-        {
+    function TurnOff() {
+        if ("off" in userparams()) {
             return ControlString(userparams().off.tostring())
         }
         return false
     }
 
-    function Control()
-    {
+    function Control() {
         if (typeof message().data == "string")
             return ControlString(message().data)
         return false
     }
 }
 
-class GenericScale extends GenericScript
-{
+class GenericScale extends GenericScript {
 
     m_scale_stim = 0
     m_scale_stim_msg = null
 
-    function Scale() { }
+    function Scale() {}
 
-    function InitStimMessage()
-    {
+    function InitStimMessage() {
         local params = userparams()
-        if (!m_scale_stim && "arcontrol" in params)
-        {
+        if (!m_scale_stim && "arcontrol" in params) {
             local stim = ObjID(params.arcontrol)
-            if (stim)
-            {
+            if (stim) {
                 m_scale_stim_msg = Object.GetName(stim) + "Stimulus"
                 m_scale_stim = stim
-            }
-            else
-            {
+            } else {
                 Debug.Log("arcontrol stimulus not found")
                 m_scale_stim_msg = ""
             }
         }
     }
 
-    function OnMessage()
-    {
+    function OnMessage() {
         if (!m_scale_stim_msg)
             InitStimMessage()
         if (MessageIs(m_scale_stim_msg))
             Scale(message().intensity)
     }
 
-    function TurnOn()
-    {
+    function TurnOn() {
         local params = userparams()
         if ("on" in params)
             return Scale(params.on.tofloat())
         return false
     }
 
-    function TurnOff()
-    {
+    function TurnOff() {
         local scale = 0.0
         local params = userparams()
         if ("off" in params)
@@ -549,60 +471,50 @@ class GenericScale extends GenericScript
         return Scale(scale)
     }
 
-    function Control()
-    {
+    function Control() {
         Scale(message().data.tofloat())
     }
 }
 
-class ScriptController extends GenericControl
-{
-    function ControlString(control)
-    {
+class ScriptController extends GenericControl {
+
+    function ControlString(control) {
         local dest = ObjID(message().data2)
-        if (dest)
-        {
+        if (dest) {
             SendMessage(dest, "ScriptControl", control)
-        }
-        else
-        {
+        } else {
             CDSend("ScriptControl", self, control)
         }
         return true
     }
+
 }
 
-class CommandControl extends GenericControl
-{
-    function ControlString(control)
-    {
+class CommandControl extends GenericControl {
+
+    function ControlString(control) {
         foreach (cmd in split(control, ";"))
             Debug.Command(cmd)
         return true
     }
+
 }
 
-class TrapMoveRelative extends GenericControl
-{
-    function IterateLinks(delta)
-    {
-         foreach (link in Link.GetAll("ControlDevice", self))
-         {
+class TrapMoveRelative extends GenericControl {
+
+    function IterateLinks(delta) {
+         foreach (link in Link.GetAll("ControlDevice", self)) {
              local target = LinkDest(link)
-             if (delta.rotate_axes)
-             {
+             if (delta.rotate_axes) {
                  Object.Teleport(target, delta.position, delta.facing, target)
-             }
-             else
-             {
+             } else {
                  local destpos = Object.Position(target)
                  destpos += delta.position
                  local destfacing = Object.Facing(target)
                  destfacing += delta.facing
                  Object.Teleport(target, destpos, destfacing, 0)
              }
-             if (Property.Possessed(target, "PhysState"))
-             {
+             if (Property.Possessed(target, "PhysState")) {
                  local vels = Property.Get(target, "PhysState", "Velocity")
                  vels += delta.velocity
                  Property.Set(target, "PhysState", "Velocity", vels)
@@ -614,8 +526,7 @@ class TrapMoveRelative extends GenericControl
          return true
     }
 
-    function ControlString(control)
-    {
+    function ControlString(control) {
         local group_pat = regexp(@"; *((\\;|[^;])*)")
         local number_pat = regexp(@"^(\w+) *= *([\+\-]?(\d+(\.\d*)?|\.\d+))")
         local delta = {
@@ -626,18 +537,15 @@ class TrapMoveRelative extends GenericControl
             rotate_axes = false
         }
         control = ";"+control
-        for (group=null, i=0; i < control.len(); i = group[0].end+1)
-        {
+        for (group = null, i = 0; i < control.len(); i = group[0].end + 1) {
             group = group_pat.capture(a, i)
             if (!group)
                 break
             local cap = control.slice(group[1].begin, group[1].end)
             local match = number_pat.capture(cap)
-            if (match)
-            {
+            if (match) {
                 local value = cap.slice(match[2].begin, match[2].end).tofloat()
-                switch(cap.slice(match[1].begin, match[1].end))
-                {
+                switch(cap.slice(match[1].begin, match[1].end)) {
                     case "x":
                         delta.position.x = value; break
                     case "y":
@@ -670,8 +578,7 @@ class TrapMoveRelative extends GenericControl
         return IterateLinks(delta)
     }
 
-    function TurnOn()
-    {
+    function TurnOn() {
         local params = userparams()
         local delta = {
             position = vector("x" in params ? params.x : 0.0,
@@ -691,33 +598,25 @@ class TrapMoveRelative extends GenericControl
         return IterateLinks(delta)
     }
 
-    function OnSim()
-    {
+    function OnSim() {
         if (message().starting)
             FixupPlayerLinks()
     }
 }
 
-class TrapCamAttach extends GenericTrap
-{
-    function Switch(turnon)
-    {
-        if (turnon)
-        {
-            if (ParamGetBool("nolens"))
-            {
+class TrapCamAttach extends GenericTrap {
+
+    function Switch(turnon) {
+        if (turnon) {
+            if (ParamGetBool("nolens")) {
                 Debug.Command("cam_attach ",self)
-            }
-            else
-            {
+            } else {
                 if (ParamGetBool("static"))
                     Camera.StaticAttach(self)
                 else
                     Camera.DynamicAttach(self)
             }
-        }
-        else
-        {
+        } else {
             if (ParamGetBool("forcereturn"))
                 Camera.ForceCameraReturn()
             else
@@ -726,19 +625,15 @@ class TrapCamAttach extends GenericTrap
     }
 }
 
-class TrapFreezePlayer extends GenericScale
-{
+class TrapFreezePlayer extends GenericScale {
 
-    function OnBeginScript()
-    {
+    function OnBeginScript() {
         if (!IsDataSet("is_frozen"))
             SetData("is_frozen", false)
     }
 
-    function TurnOn()
-    {
-        if (!GetData("is_frozen"))
-        {
+    function TurnOn() {
+        if (!GetData("is_frozen")) {
             local value = ParamGetFloat("freeze_speed", 0.0)
             DrkInv.AddSpeedControl(ParamGetString("freeze_name", "Freeze"), value, value)
             SetData("is_frozen", true)
@@ -746,18 +641,15 @@ class TrapFreezePlayer extends GenericScale
         return true
     }
 
-    function TurnOff()
-    {
-        if (GetData("is_frozen"))
-        {
+    function TurnOff() {
+        if (GetData("is_frozen")) {
             DrkInv.RemoveSpeedControl(ParamGetString("freeze_name", "Freeze"))
             SetData("is_frozen", false)
         }
         return true
     }
 
-    function Scale(value)
-    {
+    function Scale(value) {
             local name = ParamGetString("freeze_name", "Freeze")
             if (GetData("is_frozen"))
                 DrkInv.RemoveSpeedControl(name)
@@ -767,35 +659,30 @@ class TrapFreezePlayer extends GenericScale
     }
 }
 
-class TrapRenderFlash extends GenericTrap
-{
-    function Switch(turnon)
-    {
-        if (GetAPIVersion() < 8)
-        {
+class TrapRenderFlash extends GenericTrap {
+
+    function Switch(turnon) {
+        if (GetAPIVersion() < 8) {
             Debug.MPrint("TrapRenderFlash requires Thief v1.24 or SS2 v2.45")
             return
         }
-        if (turnon)
-        {
+        if (turnon) {
             local player = ObjID("Player")
             local avatar = Object.Archetype(player)
             local flavor = linkkind("RenderFlash")
             local flashlink = GetAnyLinkInheritedSrc(flavor, self)
-            if (!flashlink)
-            {
+            if (!flashlink) {
                 Debug.MPrint("RenderFlash could not be found")
                 return
             }
             local olddest = 0
             local oldlink = Link.GetOne(flavor, avatar)
-            if (oldlink)
-            {
+            if (oldlink) {
                 olddest = LinkDest(oldlink)
                 Link.Destroy(oldlink)
             }
             local newlink = Link.Create(flavor, avatar, LinkDest(flashlink))
-            local schema = GetAnyLink(linkkind("SoundDescription"), self)
+            local schema = GetAnyLink("SoundDescription", self)
             if (schema)
                 Sound.PlaySchemaAmbient(player, LinkDest(schema))
             Camera.StaticAttach(player)
@@ -807,49 +694,38 @@ class TrapRenderFlash extends GenericTrap
     }
 }
 
-class TrapFadeOut extends GenericScale
-{
+class TrapFadeOut extends GenericScale {
 }
 
-if (GetAPIVersion() >= 8)
-{
-    function TrapFadeOut::Scale(value)
-    {
-        if (value < 0)
-        {
+if (GetAPIVersion() >= 8) {
+    function TrapFadeOut::Scale(value) {
+        if (value < 0) {
             DarkGame.FadeToBlack(-1)
         }
         else
             DarkGame.FadeToBlack(value)
         return true
     }
-}
-else
-{
-    function TrapFadeOut::Scale(value)
-    {
+} else {
+    function TrapFadeOut::Scale(value) {
         DarkGame.FadeToBlack(value)
         return true
     }
 
-    function TrapFadeOut::TurnOff()
-    {
+    function TrapFadeOut::TurnOff() {
         DarkGame.FadeToBlack(-1);
         Reply(true)
     }
 }
 
-class ZeroGravRoom extends tnhRootScript
-{
-    function OnPlayerRoomEnter()
-    {
+class ZeroGravRoom extends tnhRootScript {
+    function OnPlayerRoomEnter() {
         local move_obj = message().MoveObjId
         Property.Set(move_obj, "PhysAttr", "Gravity %", 0.0)
         Property.Set(move_obj, "PhysAttr", "Base Friction", 1.0)
     }
 
-    function OnPlayerRoomExit()
-    {
+    function OnPlayerRoomExit() {
         local move_obj = message().MoveObjId
         local room_obj = message().ToObjId
         local gravity = 100.0
@@ -860,13 +736,13 @@ class ZeroGravRoom extends tnhRootScript
 }
 
 
-class KnockOnDoor extends tnhRootScript
-{
-    function OnFrobWorldEnd()
-    {
-        if (Locked.IsLocked(self) && Door.GetDoorState(self) == eDoorStatus.kDoorClosed)
-            foreach (owns_link in Link.GetAll("~Owns", self, 0))
-            {
+class KnockOnDoor extends tnhRootScript {
+
+    function OnFrobWorldEnd() {
+        if (Locked.IsLocked(self) &&
+            Door.GetDoorState(self) == eDoorStatus.kDoorClosed
+        )
+            foreach (owns_link in Link.GetAll("~Owns", self, 0)) {
                 local owner = LinkDest(owns_link)
                 AI.Signal(owner, "knock_knock")
                 PostMessage(owner, "Interact", "knock_knock")
@@ -876,19 +752,18 @@ class KnockOnDoor extends tnhRootScript
 }
 
 local DisplayBookText = class {
+
     m_host = 0
 
-    constructor(host)
-    {
+    constructor(host) {
         m_host = host
     }
 
 }
 
-class OnScreenText extends GenericScript
-{
-    function DisplayBookPage(book, page)
-    {
+class OnScreenText extends GenericScript {
+
+    function DisplayBookPage(book, page) {
         local book_file = "..\\books\\" + book
         local page_s = format("page_%d", page)
         local page_text = Data.GetString(book_file, page_s, "", "strings")
@@ -901,31 +776,25 @@ class OnScreenText extends GenericScript
         if (str != "")
             color = strtocolor(str)
         str = Data.GetString(book_file, page_s + "_time", "", "strings")
-        if (str != "")
-        {
+        if (str != "") {
             local wait = strtotime(str)
             if (wait > 0)
                 time = wait
         }
-        if (time == 0)
-        {
+        if (time == 0) {
             time = CalcTextTime(page_text)
         }
         DisplayText(page_text, color, time)
 
-        str = Data.GetString(book_file, "page_s" + "_auto", "", "strings")
-        if (str != "")
-        {
+        str = Data.GetString(book_file, page_s + "_auto", "", "strings")
+        if (str != "") {
             local wait = strtotime(str)
-            if (wait > 0 || str[0] == '0')
-            {
+            if (wait > 0 || str[0] == '0') {
                 if (wait > time)
                     time = wait
-            }
-            else
+            } else
                 time = 0
-        }
-        else
+        } else
             time = 0
         page++
         str = Data.GetString(book_file, page_s + "_next", "", "strings")
@@ -939,69 +808,55 @@ class OnScreenText extends GenericScript
         return true
     }
 
-    function DisplayText(text, color, time)
-    {
+    function DisplayText(text, color, time) {
         DarkUI.TextMessage(text, color, time)
     }
 
-    function DisplayPage(page)
-    {
-        if (!HasProperty("Book"))
-        {
+    function DisplayPage(page) {
+        if (!HasProperty("Book")) {
             DebugString("Object has no book!")
             return false
         }
         local book = GetProperty("Book")
-        if (book.len() == 0)
-        {
+        if (book.len() == 0) {
             DebugString("Object has no book!")
             return false
         }
         return DisplayBookPage(book, page)
     }
 
-    function ChangePage(page)
-    {
+    function ChangePage(page) {
         return SetData("page", page).tointeger()
     }
 
-    function ChangeBookPage(book, page, time)
-    {
-        if (time > 0)
-        {
-            if (IsDataSet("auto_scroll"))
-            {
+    function ChangeBookPage(book, page, time) {
+        if (time > 0) {
+            if (IsDataSet("auto_scroll")) {
                 KillTimer(GetData("auto_scroll"))
                 ClearData("auto_scroll")
             }
-            SetData("auto_scroll", SetOneShotTimer("AutoScroll", time))
+            SetData("auto_scroll", SetOneShotTimer("AutoScroll", time / 1000.0))
         }
         return ChangePage(page)
     }
 
-    function DefaultTextColor()
-    {
+    function DefaultTextColor() {
         return 0xFFFFFF 
     }
 
-    function OnBeginScript()
-    {
+    function OnBeginScript() {
         SetData("page", ParamGetInt("page", 0))
     }
 
-    function OnTimer()
-    {
-        if (message().name == "AutoScroll")
-        {
+    function OnTimer() {
+        if (message().name == "AutoScroll") {
             ClearData("auto_scroll")
             DisplayPage(GetData("page"))
         }
     }
 
-    function TurnOn()
-    {
-        if (IsDataSet("auto_scroll"))
-        {
+    function TurnOn() {
+        if (IsDataSet("auto_scroll")) {
             KillTimer(GetData("auto_scroll"))
             ClearData("auto_scroll")
         }
@@ -1012,63 +867,57 @@ class OnScreenText extends GenericScript
         Reply(true)
     }
 
-    function Control()
-    {
+    function Control() {
         local control = message().data
         local op = '@'
         local arg = -1
         try
-            switch (typeof control)
-            {
-                case "integer":
-                    arg = control; break
-                case "float":
-                    arg = control.tointeger(); break
-                case "string":
-                    control = lstrip(control)
-                    if (control[0] >= '0' && control[0] <= '9')
-                        arg = control.tointeger()
-                    else
-                    {
-                        op = control[0]
-                        control = control.slice(1)
-                        arg = control[0] == '.' ? 0x7FFFFFFF : control.tointeger()
-                    }
-                    break
-                default:
-                    Reply(false)
-                    return
+            switch (typeof control) {
+            case "integer":
+                arg = control; break
+            case "float":
+                arg = control.tointeger(); break
+            case "string":
+                control = lstrip(control)
+                if (control[0] >= '0' && control[0] <= '9')
+                    arg = control.tointeger()
+                else {
+                    op = control[0]
+                    control = control.slice(1)
+                    arg = control[0] == '.' ? 0x7FFFFFFF : control.tointeger()
+                }
+                break
+            default:
+                Reply(false)
+                return
             }
-        catch(err)
-        {
+        catch(err) {
             Reply(false)
             return
         }
-        if (arg > 0)
-        {
+        if (arg > 0) {
             local page = GetData("page")
             if (arg == 0x7FFFFFFF)
                 arg = page
-            switch (op)
-            {
-                case '@':
-                    if (page != arg)
-                        ChangePage(arg)
-                    break
-                case '#':
-                    DisplayPage(arg); break
-                case '+':
-                    if (arg != 0)
-                        ChangePage(page + arg)
-                    break
-                case '-':
-                    if (arg != 0)
-                        ChangePage(arg > page ? 0 : page - arg)
-                    break
-                case '$':
-                default:
-                    Reply(false)
-                    return
+            switch (op) {
+            case '@':
+                if (page != arg)
+                    ChangePage(arg)
+                break
+            case '#':
+                DisplayPage(arg); break
+            case '+':
+                if (arg != 0)
+                    ChangePage(page + arg)
+                break
+            case '-':
+                if (arg != 0)
+                    ChangePage(arg > page ? 0 : page - arg)
+                break
+            case '$':
+            default:
+                Reply(false)
+                return
             }
         }
         Reply(true)

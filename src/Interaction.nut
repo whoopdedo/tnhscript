@@ -159,7 +159,7 @@ class OnScreenText extends GenericScript {
                 KillTimer(GetData("auto_scroll"))
                 ClearData("auto_scroll")
             }
-            SetData("auto_scroll", SetOneShotTimer("AutoScroll", time))
+            SetData("auto_scroll", SetOneShotTimer("AutoScroll", time / 1000.0))
         }
         return ChangePage(page)
     }

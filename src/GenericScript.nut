@@ -41,7 +41,7 @@ class GenericScript extends tnhRootScript
 
     function InitTrapVars() {
         if (HasProperty("ScriptTiming")) {
-            m_timing = GetProperty("ScriptTiming")
+            m_timing = GetProperty("ScriptTiming") / 1000.0
         }
         if (HasProperty("TrapFlags")) {
             m_flags = GetProperty("TrapFlags")
@@ -102,7 +102,7 @@ class GenericScript extends tnhRootScript
                 inversemsg = "TurnOn"
             }
             if (result) {
-                if (m_timing > 0)
+                if (m_timing >= 0.001)
                     SetOneShotTimer(inversemsg, m_timing)
                 if (m_flags & TRAPF_ONCE)
                     SetLock(true)
